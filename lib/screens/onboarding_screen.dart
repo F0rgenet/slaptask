@@ -155,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                   if (_phase == 'review') _buildReview(),
                   const SizedBox(height: 48),
                   Text(
-                    'NO EXCUSES. NO MERCY.',
+                    'НИКАКИХ ОПРАВДАНИЙ. НИКАКОЙ ПОЩАДЫ.',
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 9,
                       letterSpacing: 3,
@@ -186,7 +186,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
               ),
               alignment: Alignment.center,
               child: Text(
-                'ST',
+                'СТ',
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -209,7 +209,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         if (_phase == 'intro') ...[
           const SizedBox(height: 16),
           Text(
-            'Record your goals. AI will generate 5 aggressive tasks for you every day. No excuses.',
+            'Запиши свои цели. ИИ будет каждый день создавать для тебя 5 жестких задач. Никаких оправданий.',
             textAlign: TextAlign.center,
             style: GoogleFonts.jetBrainsMono(
               fontSize: 12,
@@ -241,7 +241,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         ),
         const SizedBox(height: 32),
         Text(
-          'TAP TO RECORD',
+          'НАЖМИ ДЛЯ ЗАПИСИ',
           style: GoogleFonts.jetBrainsMono(
             fontSize: 10,
             letterSpacing: 3,
@@ -250,7 +250,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         ),
         const SizedBox(height: 32),
         Text(
-          'OR TYPE MANUALLY',
+          'ИЛИ ВВЕДИ ВРУЧНУЮ',
           style: GoogleFonts.jetBrainsMono(
             fontSize: 10,
             letterSpacing: 2,
@@ -265,7 +265,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
             _phase = 'review';
           }),
           child: Text(
-            'skip to text input',
+            'перейти к вводу текста',
             style: GoogleFonts.jetBrainsMono(
               fontSize: 11,
               color: SlapTheme.primary,
@@ -353,7 +353,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
             ),
             const SizedBox(width: 8),
             Text(
-              'RECORDING',
+              'ИДЕТ ЗАПИСЬ',
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 10,
                 letterSpacing: 3,
@@ -391,7 +391,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'YOUR GOALS',
+          'ТВОИ ЦЕЛИ',
           style: GoogleFonts.jetBrainsMono(
             fontSize: 10,
             letterSpacing: 3,
@@ -404,7 +404,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
           maxLines: 7,
           style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground, height: 1.5),
           decoration: const InputDecoration(
-            hintText: 'I want to learn German, work out 4x a week, finish my side project, read 2 books a month...',
+            hintText: 'Я хочу выучить немецкий, тренироваться 4 раза в неделю, закончить пет-проект, читать 2 книги в месяц...',
           ),
         ),
         if (_transcript.isNotEmpty) ...[
@@ -421,7 +421,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                 const Icon(Icons.graphic_eq_rounded, size: 14, color: SlapTheme.mutedForeground),
                 const SizedBox(width: 8),
                 Text(
-                  'transcribed from voice',
+                  'расшифровано из голоса',
                   style: GoogleFonts.jetBrainsMono(fontSize: 10, color: SlapTheme.mutedForeground),
                 ),
               ],
@@ -445,7 +445,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'LOCK IN',
+                  'В ДЕЛО',
                   style: GoogleFonts.jetBrainsMono(fontSize: 12, letterSpacing: 3, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(width: 12),
@@ -463,7 +463,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
               _editController.clear();
             }),
             child: Text(
-              're-record',
+              'перезаписать',
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 11,
                 color: SlapTheme.mutedForeground,

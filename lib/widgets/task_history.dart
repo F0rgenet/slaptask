@@ -20,12 +20,15 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
     final date = DateTime.parse(dateStr);
     final now = DateTime.now();
     final yesterday = DateTime(now.year, now.month, now.day - 1);
+    
     if (date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day) {
-      return 'Yesterday';
+      return 'Вчера';
     }
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
+    
+    const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    
+    return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
   }
 
   @override
@@ -49,7 +52,7 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'HISTORY',
+                  'ИСТОРИЯ',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     letterSpacing: 3,
@@ -58,7 +61,7 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${widget.history.length}d',
+                  '${widget.history.length}д',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     color: SlapTheme.mutedForeground.withValues(alpha: 0.5),

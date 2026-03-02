@@ -43,7 +43,6 @@ void callbackDispatcher() {
         final alreadyExists = state.days.any((d) => d.date == today);
         if (alreadyExists) return true;
 
-        // --- ИСПОЛЬЗУЕМ ОБЩУЮ ЛОГИКУ ---
         final rawTaskLines = await ApiService.generateRawTasks(
           apiKey: apiKey,
           goals: state.goals!,

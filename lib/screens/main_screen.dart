@@ -77,7 +77,7 @@ class _MainScreenState extends State<MainScreen> {
       widget.onStateChanged(updated);
       await StorageService.save(updated);
     } catch (_) {
-      setState(() => _error = 'Failed to generate tasks. Try again.');
+      setState(() => _error = 'Ошибка генерации задач. Попробуйте еще раз.');
     } finally {
       setState(() => _isGenerating = false);
     }
@@ -85,16 +85,16 @@ class _MainScreenState extends State<MainScreen> {
 
   String get _greeting {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Morning';
-    if (hour < 17) return 'Afternoon';
-    return 'Evening';
+    if (hour < 12) return 'Доброе утро';
+    if (hour < 17) return 'Добрый день';
+    return 'Добрый вечер';
   }
 
   String get _dateStr {
     final now = DateTime.now();
-    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+    const weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
   }
 
   @override
@@ -144,7 +144,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             alignment: Alignment.center,
             child: Text(
-              'ST',
+              'СТ',
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
@@ -192,7 +192,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          '$_greeting. Get to work.',
+          '$_greeting. За работу.',
           style: GoogleFonts.inter(
             fontSize: 24,
             fontWeight: FontWeight.w200,
@@ -222,12 +222,12 @@ class _MainScreenState extends State<MainScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No tasks for today yet',
+            'На сегодня задач пока нет',
             style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground),
           ),
           const SizedBox(height: 8),
           Text(
-            'Generate your daily tasks or wait for\nthe 10:00 AM auto-generation',
+            'Создайте список задач на день или\nдождитесь автогенерации в 10:00',
             textAlign: TextAlign.center,
             style: GoogleFonts.jetBrainsMono(
               fontSize: 11,
@@ -256,7 +256,7 @@ class _MainScreenState extends State<MainScreen> {
                       : const Icon(Icons.flash_on_rounded, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    _isGenerating ? 'GENERATING...' : 'GENERATE TASKS',
+                    _isGenerating ? 'ГЕНЕРАЦИЯ...' : 'СОЗДАТЬ ЗАДАЧИ',
                     style: GoogleFonts.jetBrainsMono(fontSize: 11, letterSpacing: 2),
                   ),
                 ],
@@ -278,7 +278,7 @@ class _MainScreenState extends State<MainScreen> {
             const Icon(Icons.my_location_rounded, size: 16, color: SlapTheme.primary),
             const SizedBox(width: 12),
             Text(
-              'TODAY',
+              'СЕГОДНЯ',
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 10,
                 letterSpacing: 3,
@@ -328,7 +328,7 @@ class _MainScreenState extends State<MainScreen> {
             child: Column(
               children: [
                 Text(
-                  'ALL DONE',
+                  'ГОТОВО',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 12,
                     letterSpacing: 3,
@@ -337,7 +337,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Not bad. Do it again tomorrow.',
+                  'Неплохо. Повтори это завтра.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: SlapTheme.mutedForeground,
@@ -364,7 +364,7 @@ class _MainScreenState extends State<MainScreen> {
                       : const Icon(Icons.refresh_rounded, size: 14, color: SlapTheme.mutedForeground),
                   const SizedBox(width: 8),
                   Text(
-                    _isGenerating ? 'REGENERATING...' : 'THESE ARE TRASH, REGENERATE',
+                    _isGenerating ? 'ПЕРЕГЕНЕРАЦИЯ...' : 'ЭТО МУСОР, ПЕРЕГЕНЕРИРУЙ',
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       letterSpacing: 2,
@@ -380,7 +380,7 @@ class _MainScreenState extends State<MainScreen> {
             padding: const EdgeInsets.only(top: 12),
             child: Center(
               child: Text(
-                'regeneration used for today',
+                'регенерация на сегодня использована',
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 9,
                   color: SlapTheme.mutedForeground.withValues(alpha: 0.5),
@@ -415,7 +415,7 @@ class _MainScreenState extends State<MainScreen> {
         border: Border(top: BorderSide(color: SlapTheme.border)),
       ),
       child: Text(
-        'SLAPTASK \u2014 NO EXCUSES',
+        'SLAPTASK \u2014 НИКАКИХ ОПРАВДАНИЙ',
         textAlign: TextAlign.center,
         style: GoogleFonts.jetBrainsMono(
           fontSize: 9,

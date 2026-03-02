@@ -49,7 +49,7 @@ class _GoalsEditorScreenState extends State<GoalsEditorScreen> {
                     const Icon(Icons.arrow_back_rounded, size: 16, color: SlapTheme.mutedForeground),
                     const SizedBox(width: 8),
                     Text(
-                      'BACK',
+                      'НАЗАД',
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         letterSpacing: 3,
@@ -67,7 +67,7 @@ class _GoalsEditorScreenState extends State<GoalsEditorScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Edit Goals',
+                      'Ваши цели',
                       style: GoogleFonts.inter(
                         fontSize: 24,
                         fontWeight: FontWeight.w200,
@@ -77,7 +77,7 @@ class _GoalsEditorScreenState extends State<GoalsEditorScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'AI uses these to generate your daily tasks',
+                      'ИИ использует их для создания задач',
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 11,
                         color: SlapTheme.mutedForeground,
@@ -89,7 +89,7 @@ class _GoalsEditorScreenState extends State<GoalsEditorScreen> {
                       maxLines: 10,
                       style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground, height: 1.5),
                       decoration: const InputDecoration(
-                        hintText: 'Your goals...',
+                        hintText: 'Опишите ваши цели...',
                       ),
                       onChanged: (_) => setState(() {}),
                     ),
@@ -114,7 +114,7 @@ class _GoalsEditorScreenState extends State<GoalsEditorScreen> {
                             const Icon(Icons.save_outlined, size: 16),
                             const SizedBox(width: 12),
                             Text(
-                              'SAVE GOALS',
+                              'СОХРАНИТЬ ЦЕЛИ',
                               style: GoogleFonts.jetBrainsMono(fontSize: 12, letterSpacing: 3, fontWeight: FontWeight.w500),
                             ),
                           ],
