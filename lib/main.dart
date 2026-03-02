@@ -1,121 +1,214 @@
+import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'theme.dart';
+import 'models.dart';
+import 'services/storage_service.dart';
+import 'services/api_service.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/main_screen.dart';
+import 'screens/goals_editor_screen.dart';
+
+const _backgroundTaskName = 'slaptask-daily-generate';
+
+final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+
+const _notificationInitializationSettings = InitializationSettings(
+  android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+  linux: LinuxInitializationSettings(defaultActionName: 'Open SlapTask'),
+);
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    if (task == _backgroundTaskName) {
+      try {
+        await dotenv.load();
+        final apiKey = dotenv.env['PROXYAPI_KEY'];
+        if (apiKey == null || apiKey.isEmpty) return true;
+
+        final prefs = await SharedPreferences.getInstance();
+        final raw = prefs.getString('slaptask-state');
+        if (raw == null) return true;
+
+        final state = AppState.fromJson(jsonDecode(raw));
+        if (state.goals == null || state.goals!.isEmpty) return true;
+
+        final today = StorageService.getTodayKey();
+        final alreadyExists = state.days.any((d) => d.date == today);
+        if (alreadyExists) return true;
+
+        // --- ИСПОЛЬЗУЕМ ОБЩУЮ ЛОГИКУ ---
+        final rawTaskLines = await ApiService.generateRawTasks(
+          apiKey: apiKey,
+          goals: state.goals!,
+          allHistory: state.days,
+        );
+
+        if (rawTaskLines.isNotEmpty) {
+          final tasks = rawTaskLines.asMap().entries.map((e) => Task(
+            id: '$today-${e.key}', 
+            text: e.value, 
+            date: today
+          )).toList();
+
+          state.days.add(DayTasks(date: today, tasks: tasks));
+          await prefs.setString('slaptask-state', jsonEncode(state.toJson()));
+
+          await _notifications.initialize(_notificationInitializationSettings);
+          await _notifications.show(
+            0,
+            'SlapTask',
+            '5 задач готовы. Действуй или страдай.',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'slaptask_channel',
+                'SlapTask Daily',
+                importance: Importance.high,
+                priority: Priority.high,
+              ),
+              linux: LinuxNotificationDetails(),
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint("Background task error: $e");
+      }
+    }
+    return true;
+  });
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await dotenv.load(fileName: ".env");
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+  await _notifications.initialize(_notificationInitializationSettings);
+
+  if (Platform.isAndroid || Platform.isIOS) {
+    await Workmanager().initialize(callbackDispatcher);
+    await Workmanager().registerPeriodicTask(
+      _backgroundTaskName,
+      _backgroundTaskName,
+      frequency: const Duration(hours: 24),
+      initialDelay: _getDelayUntil10AM(),
+      constraints: Constraints(networkType: NetworkType.connected),
+      existingWorkPolicy: ExistingWorkPolicy.keep,
     );
   }
+
+  runApp(const SlapTaskApp());
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+Duration _getDelayUntil10AM() {
+  final now = DateTime.now();
+  var target = DateTime(now.year, now.month, now.day, 10, 0);
+  if (now.isAfter(target)) {
+    target = target.add(const Duration(days: 1));
+  }
+  return target.difference(now);
+}
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class SlapTaskApp extends StatefulWidget {
+  const SlapTaskApp({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<SlapTaskApp> createState() => _SlapTaskAppState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _SlapTaskAppState extends State<SlapTaskApp> {
+  String _screen = 'loading';
+  AppState _state = AppState();
+  late final String _apiKey;
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    _apiKey = dotenv.env['PROXYAPI_KEY'] ?? '';
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    _state = await StorageService.load();
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      if (_state.goals == null || _state.goals!.isEmpty) {
+        _screen = 'onboarding';
+      } else {
+        _screen = 'main';
+      }
     });
   }
 
+  void _onGoalsSaved(String goals) {
+    _state = AppState(goals: goals, days: _state.days);
+    StorageService.save(_state);
+    setState(() => _screen = 'main');
+  }
+
+  void _onStateChanged(AppState updated) {
+    setState(() => _state = updated);
+    StorageService.save(updated);
+  }
+
+  void _onGoalsEdited(String goals) {
+    _state = AppState(goals: goals, days: _state.days);
+    StorageService.save(_state);
+    setState(() => _screen = 'main');
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
+    return MaterialApp(
+      title: 'SlapTask',
+      theme: SlapTheme.theme,
+      debugShowCheckedModeBanner: false,
+      home: _buildScreen(),
+    );
+  }
+
+  Widget _buildScreen() {
+    if (_apiKey.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('Error: PROXY_API_KEY not found in .env')),
+      );
+    }
+
+    switch (_screen) {
+      case 'loading':
+        return _buildLoading();
+      case 'onboarding':
+        return OnboardingScreen(apiKey: _apiKey, onGoalsSaved: _onGoalsSaved);
+      case 'edit-goals':
+        return GoalsEditorScreen(
+          currentGoals: _state.goals ?? '',
+          onSave: _onGoalsEdited,
+          onBack: () => setState(() => _screen = 'main'),
+        );
+      case 'main':
+      default:
+        return MainScreen(
+          state: _state,
+          apiKey: _apiKey,
+          onStateChanged: _onStateChanged,
+          onEditGoals: () => setState(() => _screen = 'edit-goals'),
+        );
+    }
+  }
+
+  Widget _buildLoading() {
+    return const Scaffold(
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(strokeWidth: 2, color: SlapTheme.primary),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
