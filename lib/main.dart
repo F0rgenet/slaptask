@@ -59,12 +59,12 @@ void callbackDispatcher() {
           state.days.add(DayTasks(date: today, tasks: tasks));
           await prefs.setString('slaptask-state', jsonEncode(state.toJson()));
 
-          await _notifications.initialize(_notificationInitializationSettings);
+          await _notifications.initialize(settings: _notificationInitializationSettings);
           await _notifications.show(
-            0,
-            'SlapTask',
-            '5 задач готовы. Действуй или страдай.',
-            const NotificationDetails(
+            id: 0,
+            title: 'SlapTask',
+            body: '5 задач готовы. Действуй или страдай.',
+            notificationDetails: const NotificationDetails(
               android: AndroidNotificationDetails(
                 'slaptask_channel',
                 'SlapTask Daily',
@@ -88,7 +88,7 @@ void main() async {
   
   await dotenv.load(fileName: ".env");
 
-  await _notifications.initialize(_notificationInitializationSettings);
+  await _notifications.initialize(settings: _notificationInitializationSettings);
 
   if (Platform.isAndroid || Platform.isIOS) {
     await Workmanager().initialize(callbackDispatcher);
@@ -98,7 +98,6 @@ void main() async {
       frequency: const Duration(hours: 24),
       initialDelay: _getDelayUntil10AM(),
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
     );
   }
 
