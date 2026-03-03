@@ -2,30 +2,37 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../blocs/settings/settings_bloc.dart';
-import '../blocs/settings/settings_event.dart';
-import '../blocs/settings/settings_state.dart';
-import '../widgets/goals_editor_widget.dart';
+import '../../blocs/settings/settings_bloc.dart';
+import '../../data/repositories/task_repository.dart';
 import '../theme.dart';
+import '../widgets/goals_editor_widget.dart';
 
 class SettingsScreen extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onResetComplete;
 
-  const SettingsScreen({
-    super.key,
-    required this.onBack,
-    required this.onResetComplete,
-  });
+  const SettingsScreen({super.key, required this.onBack, required this.onResetComplete});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => SettingsBloc(context.read<TaskRepository>()),
+      child: _SettingsContent(onBack: onBack, onResetComplete: onResetComplete),
+    );
+  }
+}
+
+class _SettingsContent extends StatelessWidget {
+  final VoidCallback onBack;
+  final VoidCallback onResetComplete;
+
+  const _SettingsContent({required this.onBack, required this.onResetComplete});
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<SettingsBloc, SettingsState>(
       listener: (context, state) {
-        state.maybeWhen(
-          dataReset: () => onResetComplete(),
-          orElse: () {},
-        );
+        state.maybeMap(dataReset: (_) => onResetComplete(), orElse: () {});
       },
       child: Scaffold(
         body: SafeArea(
@@ -57,8 +64,8 @@ class SettingsScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: BlocBuilder<SettingsBloc, SettingsState>(
                     builder: (context, state) {
-                      return state.maybeWhen(
-                        loaded: (goals, freq, tasks, unlimited) => Column(
+                      return state.maybeMap(
+                        loaded: (s) => Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
@@ -71,20 +78,16 @@ class SettingsScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 32),
-
-                            // 1. Цели
                             GoalsEditorWidget(
-                              currentGoals: goals,
+                              currentGoals: s.appState.goals ?? '',
                               onSave: (val) => context.read<SettingsBloc>().add(SettingsEvent.updateGoals(val)),
                             ),
                             const SizedBox(height: 32),
                             const Divider(),
                             const SizedBox(height: 24),
-
-                            // 2. Количество задач
-                            _buildSectionTitle('КОЛИЧЕСТВО ЕЖЕДНЕВНЫХ ЗАДАЧ: $tasks'),
+                            _buildSectionTitle('КОЛИЧЕСТВО ЕЖЕДНЕВНЫХ ЗАДАЧ: ${s.appState.taskCount}'),
                             Slider(
-                              value: tasks.toDouble(),
+                              value: s.appState.taskCount.toDouble(),
                               min: 1,
                               max: 10,
                               divisions: 9,
@@ -93,11 +96,9 @@ class SettingsScreen extends StatelessWidget {
                                   context.read<SettingsBloc>().add(SettingsEvent.updateTaskCount(val.toInt())),
                             ),
                             const SizedBox(height: 24),
-
-                            // 3. Частота
-                            _buildSectionTitle('ОБНОВЛЯТЬ ЗАДАЧИ КАЖДЫЕ: $freq ЧАСОВ'),
+                            _buildSectionTitle('ОБНОВЛЯТЬ ЗАДАЧИ КАЖДЫЕ: ${s.appState.frequencyHours} ЧАСОВ'),
                             Slider(
-                              value: freq.toDouble(),
+                              value: s.appState.frequencyHours.toDouble(),
                               min: 1,
                               max: 48,
                               divisions: 47,
@@ -108,15 +109,14 @@ class SettingsScreen extends StatelessWidget {
                             const SizedBox(height: 24),
                             const Divider(),
                             const SizedBox(height: 24),
-
-                            // 4. Debug Section
                             if (kDebugMode) ...[
                               _buildSectionTitle('DEBUG ОПЦИИ'),
                               SwitchListTile(
                                 contentPadding: EdgeInsets.zero,
-                                activeColor: SlapTheme.primary,
+                                activeThumbColor: SlapTheme.primary,
+                                activeTrackColor: SlapTheme.primary.withValues(alpha: 0.3),
                                 title: Text('Неограниченная перегенерация', style: GoogleFonts.inter(fontSize: 14)),
-                                value: unlimited,
+                                value: s.appState.unlimitedRegen,
                                 onChanged: (val) =>
                                     context.read<SettingsBloc>().add(SettingsEvent.toggleUnlimitedRegen(val)),
                               ),
@@ -134,8 +134,6 @@ class SettingsScreen extends StatelessWidget {
                               const Divider(),
                               const SizedBox(height: 24),
                             ],
-
-                            // 5. Сброс данных
                             _buildSectionTitle('ОПАСНАЯ ЗОНА'),
                             const SizedBox(height: 8),
                             ElevatedButton(
@@ -166,11 +164,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.jetBrainsMono(
-        fontSize: 10,
-        letterSpacing: 2,
-        color: SlapTheme.mutedForeground,
-      ),
+      style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 2, color: SlapTheme.mutedForeground),
     );
   }
 

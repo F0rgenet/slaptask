@@ -1,14 +1,12 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'settings_event.freezed.dart';
+part of 'settings_bloc.dart';
 
 @freezed
 class SettingsEvent with _$SettingsEvent {
-  const factory SettingsEvent.load() = SettingsLoad;
-  const factory SettingsEvent.updateGoals(String goals) = SettingsUpdateGoals;
-  const factory SettingsEvent.updateFrequency(int hours) = SettingsUpdateFrequency;
-  const factory SettingsEvent.updateTaskCount(int count) = SettingsUpdateTaskCount;
-  const factory SettingsEvent.toggleUnlimitedRegen(bool value) = SettingsToggleUnlimitedRegen;
-  const factory SettingsEvent.resetData() = SettingsResetData;
-  const factory SettingsEvent.spawnTestNotification() = SettingsSpawnTestNotification;
+  const factory SettingsEvent.load() = _Load;
+  const factory SettingsEvent.updateGoals(String goals) = _UpdateGoals;
+  const factory SettingsEvent.updateFrequency(int hours) = _UpdateFrequency;
+  const factory SettingsEvent.updateTaskCount(int count) = _UpdateTaskCount;
+  const factory SettingsEvent.toggleUnlimitedRegen(bool value) = _ToggleUnlimitedRegen;
+  const factory SettingsEvent.resetData() = _ResetData;
+  const factory SettingsEvent.spawnTestNotification() = _SpawnTestNotification;
 }

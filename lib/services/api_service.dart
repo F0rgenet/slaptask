@@ -1,20 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models.dart';
+import '../data/models/task.dart';
+import '../data/models/day_tasks.dart';
 import 'storage_service.dart';
 
 class ApiService {
   static const _chatUrl = 'https://openai.api.proxyapi.ru/v1/chat/completions';
   static const _transcribeUrl = 'https://api.proxyapi.ru/openai/v1/audio/transcriptions';
-
   static const _modelName = 'gemini/gemini-3-flash-preview';
 
   final String apiKey;
 
   ApiService(this.apiKey);
 
-  static Future<List<String>> generateRawTasks({
-    required String apiKey,
+  Future<List<String>> generateRawTasks({
     required String goals,
     required List<DayTasks> allHistory,
     required int taskCount,
@@ -47,7 +46,7 @@ class ApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to generate tasks: ${response.statusCode} | ${response.body}');
+      throw Exception('Failed to generate tasks: ${response.statusCode}');
     }
 
     final data = jsonDecode(response.body);
@@ -61,9 +60,8 @@ class ApiService {
         .toList();
   }
 
-  static String _buildHistoryString(List<DayTasks> allDays) {
+  String _buildHistoryString(List<DayTasks> allDays) {
     final recent = allDays.length > 7 ? allDays.sublist(allDays.length - 7) : allDays;
-
     if (recent.isEmpty) return "История пуста (первый день).";
 
     final buffer = StringBuffer();
@@ -77,16 +75,14 @@ class ApiService {
     return buffer.toString();
   }
 
-  Future<DayTasks> generateTasks(AppState state) async {
+  Future<DayTasks> generateDayTasks(String goals, List<DayTasks> history, int count) async {
     final lines = await generateRawTasks(
-      apiKey: apiKey,
-      goals: state.goals ?? '',
-      allHistory: state.days,
-      taskCount: state.taskCount,
+      goals: goals,
+      allHistory: history,
+      taskCount: count,
     );
 
     final today = StorageService.getTodayKey();
-
     final tasks = lines
         .asMap()
         .entries

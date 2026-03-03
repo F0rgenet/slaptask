@@ -1,43 +1,41 @@
-import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:logger/logger.dart';
-import 'package:record/record.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import '../../blocs/onboarding/onboarding_bloc.dart';
+import '../../data/repositories/task_repository.dart';
+import '../../services/api_service.dart';
+import '../../services/audio_service.dart';
 import '../theme.dart';
-import '../services/api_service.dart';
 
-var logger = Logger();
+class OnboardingScreen extends StatelessWidget {
+  final VoidCallback onFinish;
 
-class OnboardingScreen extends StatefulWidget {
-  final String apiKey;
-  final void Function(String goals) onGoalsSaved;
-
-  const OnboardingScreen({
-    super.key,
-    required this.apiKey,
-    required this.onGoalsSaved,
-  });
+  const OnboardingScreen({super.key, required this.onFinish});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => OnboardingBloc(
+        context.read<AudioService>(),
+        context.read<ApiService>(),
+        context.read<TaskRepository>(),
+      ),
+      child: _OnboardingContent(onFinish: onFinish),
+    );
+  }
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> with TickerProviderStateMixin {
-  String _phase = 'intro';
-  bool _isRecording = false;
-  int _seconds = 0;
-  double _audioLevel = 0;
-  String _transcript = '';
+class _OnboardingContent extends StatefulWidget {
+  final VoidCallback onFinish;
+  const _OnboardingContent({required this.onFinish});
+
+  @override
+  State<_OnboardingContent> createState() => _OnboardingContentState();
+}
+
+class _OnboardingContentState extends State<_OnboardingContent> with SingleTickerProviderStateMixin {
   final _editController = TextEditingController();
-  Timer? _timer;
-  Timer? _levelTimer;
-  final _recorder = AudioRecorder();
-  String? _recordingPath;
   late AnimationController _pulseController;
 
   @override
@@ -51,131 +49,64 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _levelTimer?.cancel();
-    _recorder.dispose();
     _editController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
-  Future<void> _startRecording() async {
-    if (!kIsWeb && !Platform.isLinux) {
-      final status = await Permission.microphone.request();
-      if (!status.isGranted) {
-        setState(() {
-          _transcript = '';
-          _editController.text = '';
-          _phase = 'review';
-        });
-        return;
-      }
-    }
-
-    final dir = await getApplicationDocumentsDirectory();
-    _recordingPath = '${dir.path}/recording.m4a';
-
-    await _recorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000),
-      path: _recordingPath!,
-    );
-
-    setState(() {
-      _isRecording = true;
-      _phase = 'recording';
-      _seconds = 0;
-    });
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _seconds++);
-    });
-
-    _levelTimer = Timer.periodic(const Duration(milliseconds: 100), (_) async {
-      final amplitude = await _recorder.getAmplitude();
-      final db = amplitude.current;
-      final normalized = ((db + 50) / 50).clamp(0.0, 1.0);
-      if (mounted) setState(() => _audioLevel = normalized);
-    });
-  }
-
-  Future<void> _stopRecording() async {
-    _timer?.cancel();
-    _levelTimer?.cancel();
-    final path = await _recorder.stop();
-
-    setState(() {
-      _isRecording = false;
-      _audioLevel = 0;
-    });
-
-    if (path != null) {
-      await _transcribeAudio(path);
-    } else {
-      setState(() => _phase = 'review');
-    }
-  }
-
-  Future<void> _transcribeAudio(String path) async {
-    try {
-      final api = ApiService(widget.apiKey);
-      final text = await api.transcribeAudio(path);
-      setState(() {
-        _transcript = text;
-        _editController.text = text;
-        _phase = 'review';
-      });
-    } catch (error) {
-      setState(() {
-        _transcript = '';
-        _editController.text = '';
-        _phase = 'review';
-      });
-      logger.t(error);
-    }
-  }
-
-  String _formatTime(int s) {
-    final m = (s ~/ 60).toString().padLeft(2, '0');
-    final sec = (s % 60).toString().padLeft(2, '0');
-    return '$m:$sec';
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 48),
-                  if (_phase == 'intro') _buildIntro(),
-                  if (_phase == 'recording') _buildRecording(),
-                  if (_phase == 'review') _buildReview(),
-                  const SizedBox(height: 48),
-                  Text(
-                    'НИКАКИХ ОПРАВДАНИЙ. НИКАКОЙ ПОЩАДЫ.',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 9,
-                      letterSpacing: 3,
-                      color: SlapTheme.mutedForeground.withValues(alpha: 0.3),
-                    ),
+    return BlocConsumer<OnboardingBloc, OnboardingState>(
+      listener: (context, state) {
+        state.mapOrNull(
+          review: (s) {
+            if (s.transcript.isNotEmpty) _editController.text = s.transcript;
+          },
+          success: (_) => widget.onFinish(),
+        );
+      },
+      builder: (context, state) {
+        return Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildHeader(state),
+                      const SizedBox(height: 48),
+                      state.maybeMap(
+                        initial: (_) => _buildIntro(context),
+                        recording: (s) => _buildRecording(context, s.seconds, s.audioLevel),
+                        processing: (_) => const Center(child: CircularProgressIndicator(color: SlapTheme.primary)),
+                        review: (s) => _buildReview(context, s.transcript),
+                        orElse: () => const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 48),
+                      Text(
+                        'НИКАКИХ ОПРАВДАНИЙ. НИКАКОЙ ПОЩАДЫ.',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 9,
+                          letterSpacing: 3,
+                          color: SlapTheme.mutedForeground.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(OnboardingState state) {
+    final showSub = state.maybeMap(initial: (_) => true, orElse: () => false);
     return Column(
       children: [
         Row(
@@ -210,7 +141,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
             ),
           ],
         ),
-        if (_phase == 'intro') ...[
+        if (showSub) ...[
           const SizedBox(height: 16),
           Text(
             'Запиши свои цели. ИИ будет каждый день создавать для тебя 5 жестких задач. Никаких оправданий.',
@@ -226,11 +157,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
     );
   }
 
-  Widget _buildIntro() {
+  Widget _buildIntro(BuildContext context) {
     return Column(
       children: [
         GestureDetector(
-          onTap: _startRecording,
+          onTap: () => context.read<OnboardingBloc>().add(const OnboardingEvent.startRecording()),
           child: Container(
             width: 128,
             height: 128,
@@ -263,11 +194,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         ),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: () => setState(() {
-            _transcript = '';
-            _editController.text = '';
-            _phase = 'review';
-          }),
+          onTap: () => context.read<OnboardingBloc>().add(const OnboardingEvent.stopRecording()),
           child: Text(
             'перейти к вводу текста',
             style: GoogleFonts.jetBrainsMono(
@@ -282,7 +209,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
     );
   }
 
-  Widget _buildRecording() {
+  Widget _buildRecording(BuildContext context, int seconds, double audioLevel) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+
     return Column(
       children: [
         SizedBox(
@@ -293,22 +223,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
             children: [
               AnimatedBuilder(
                 animation: _pulseController,
-                builder: (_, __) => Transform.scale(
-                  scale: 1 + _audioLevel * 0.6,
+                builder: (context, _) => Transform.scale(
+                  scale: 1 + audioLevel * 0.6,
                   child: Container(
                     width: 128,
                     height: 128,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: SlapTheme.primary.withValues(alpha: 0.1 + _audioLevel * 0.15),
+                      color: SlapTheme.primary.withValues(alpha: 0.1 + audioLevel * 0.15),
                     ),
                   ),
                 ),
               ),
               AnimatedBuilder(
                 animation: _pulseController,
-                builder: (_, __) => Transform.scale(
-                  scale: 1 + _audioLevel * 0.3,
+                builder: (context, _) => Transform.scale(
+                  scale: 1 + audioLevel * 0.3,
                   child: Container(
                     width: 110,
                     height: 110,
@@ -320,7 +250,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                 ),
               ),
               GestureDetector(
-                onTap: _stopRecording,
+                onTap: () => context.read<OnboardingBloc>().add(const OnboardingEvent.stopRecording()),
                 child: Container(
                   width: 80,
                   height: 80,
@@ -337,7 +267,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         ),
         const SizedBox(height: 24),
         Text(
-          _formatTime(_seconds),
+          '$m:$s',
           style: GoogleFonts.jetBrainsMono(
             fontSize: 24,
             color: SlapTheme.foreground,
@@ -367,30 +297,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
           ],
         ),
         const SizedBox(height: 24),
-        if (_isRecording)
-          SizedBox(
-            height: 32,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(24, (i) {
-                final h = max(4.0, _audioLevel * 32 * sin(i * 0.5 + DateTime.now().millisecondsSinceEpoch * 0.003));
-                return Container(
-                  width: 2,
-                  height: h,
-                  margin: const EdgeInsets.symmetric(horizontal: 1),
-                  decoration: BoxDecoration(
-                    color: SlapTheme.primary.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                );
-              }),
-            ),
+        SizedBox(
+          height: 32,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(24, (i) {
+              final h = max(4.0, audioLevel * 32 * sin(i * 0.5 + DateTime.now().millisecondsSinceEpoch * 0.003));
+              return Container(
+                width: 2,
+                height: h,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(
+                  color: SlapTheme.primary.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              );
+            }),
           ),
+        ),
       ],
     );
   }
 
-  Widget _buildReview() {
+  Widget _buildReview(BuildContext context, String transcript) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -412,7 +341,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                 'Я хочу выучить немецкий, тренироваться 4 раза в неделю, закончить пет-проект, читать 2 книги в месяц...',
           ),
         ),
-        if (_transcript.isNotEmpty) ...[
+        if (transcript.isNotEmpty) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -437,13 +366,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         SizedBox(
           height: 56,
           child: ElevatedButton(
-            onPressed:
-                _editController.text.trim().isEmpty ? null : () => widget.onGoalsSaved(_editController.text.trim()),
+            onPressed: () {
+              if (_editController.text.trim().isNotEmpty) {
+                context.read<OnboardingBloc>().add(OnboardingEvent.saveGoals(_editController.text.trim()));
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: SlapTheme.primary,
               foregroundColor: SlapTheme.primaryForeground,
-              disabledBackgroundColor: SlapTheme.primary.withValues(alpha: 0.3),
-              disabledForegroundColor: SlapTheme.primaryForeground.withValues(alpha: 0.3),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
@@ -463,11 +393,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         const SizedBox(height: 16),
         Center(
           child: GestureDetector(
-            onTap: () => setState(() {
-              _phase = 'intro';
-              _transcript = '';
-              _editController.clear();
-            }),
+            onTap: () {
+               _editController.clear();
+               context.read<OnboardingBloc>().add(const OnboardingEvent.reset());
+            },
             child: Text(
               'перезаписать',
               style: GoogleFonts.jetBrainsMono(

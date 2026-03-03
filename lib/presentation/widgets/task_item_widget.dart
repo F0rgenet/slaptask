@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../data/models/task.dart';
 import '../theme.dart';
-import '../models.dart';
 
 class TaskItemWidget extends StatelessWidget {
   final Task task;
