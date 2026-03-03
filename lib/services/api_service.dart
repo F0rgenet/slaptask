@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../data/models/task.dart';
 import '../data/models/day_tasks.dart';
 import 'storage_service.dart';
 
 class ApiService {
-  static const _chatUrl = 'https://openai.api.proxyapi.ru/v1/chat/completions';
+  static const _baseUrl = 'https://api.proxyapi.ru/google/v1beta/models/gemini-3-flash-preview:generateContent';
   static const _transcribeUrl = 'https://api.proxyapi.ru/openai/v1/audio/transcriptions';
   static const _modelName = 'gemini/gemini-3-flash-preview';
 
@@ -13,102 +14,107 @@ class ApiService {
 
   ApiService(this.apiKey);
 
-  Future<List<String>> generateRawTasks({
-    required String goals,
-    required List<DayTasks> allHistory,
-    required int taskCount,
-  }) async {
-    final historyStr = _buildHistoryString(allHistory);
+  Future<DayTasks> generateDayTasks(String goals, List<DayTasks> history, int count) async {
+    final recentHistory = history.take(7).toList();
+    final historyStr = _buildHistoryString(recentHistory);
 
-    final systemPrompt = 'Ты — SlapTask, жесткий, справедливый и бескомпромиссный ИИ-тренер по дисциплине.\n'
-        'Твоя задача — заставить пользователя двигаться к целям, невзирая на оправдания.\n'
-        'Проанализируй его цели и историю задач (где [DONE] — успех, [FAILED] — провал).\n'
-        '1. Если пользователь часто проваливается: дай задачи чуть проще, но критически важные, чтобы вернуть режим. Будь строг.\n'
-        '2. Если пользователь справляется: повышай планку, не давай расслабиться.\n'
-        'Сгенерируй ровно $taskCount конкретных, измеримых задач на сегодня (действия, а не размышления).\n'
-        'Формат ответа: ТОЛЬКО $taskCount строк текста. Без нумерации (1., -), без кавычек, без приветствий и мотивационной воды.';
+    final systemPrompt = '''
+Ты — SlapTask, жесткий и справедливый ИИ-тренер дисциплины.
+Анализируй цели и историю выполнения задач.
+Если провалов много — упростить, но оставить критично важные действия.
+Если успехов много — повышать планку.
+Никакой воды. Только конкретные измеримые действия.
+''';
 
     final response = await http.post(
-      Uri.parse(_chatUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      },
+      Uri.parse(_baseUrl),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $apiKey'},
       body: jsonEncode({
-        'model': _modelName,
-        'messages': [
-          {'role': 'system', 'content': systemPrompt},
-          {'role': 'user', 'content': 'МОИ ЦЕЛИ:\n$goals\n\nИСТОРИЯ ЗАДАЧ:\n$historyStr'},
+        "model": _modelName,
+        "contents": [
+          {
+            "parts": [
+              {"text": "$systemPrompt\n\nЦЕЛИ:\n$goals\n\nИСТОРИЯ:\n$historyStr"},
+            ],
+          },
         ],
-        'temperature': 0.7,
-        'max_tokens': 500,
+        "generationConfig": {
+          "responseMimeType": "application/json",
+          "responseJsonSchema": {
+            "type": "object",
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": count,
+                "maxItems": count,
+              },
+            },
+            "required": ["tasks"],
+          },
+        },
       }),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to generate tasks: ${response.statusCode}');
+      throw Exception('Gemini API Error: ${response.statusCode} ${response.body}');
     }
 
-    final data = jsonDecode(response.body);
-    final content = data['choices']?[0]?['message']?['content'] as String? ?? '';
+    final tasks = await compute(_parseTasks, response.body);
 
-    return content
-        .split('\n')
-        .map((l) => l.replaceAll(RegExp(r'^\d+[.)]\s*'), '').replaceAll(RegExp(r'^[-*]\s*'), '').trim())
-        .where((l) => l.isNotEmpty)
-        .take(taskCount)
-        .toList();
+    final today = StorageService.getTodayKey();
+
+    final taskModels = tasks.asMap().entries.map((e) {
+      return Task(id: '$today-${e.key}', text: e.value, date: today);
+    }).toList();
+
+    return DayTasks(date: today, tasks: taskModels);
   }
 
-  String _buildHistoryString(List<DayTasks> allDays) {
-    final recent = allDays.length > 7 ? allDays.sublist(allDays.length - 7) : allDays;
-    if (recent.isEmpty) return "История пуста (первый день).";
+  static List<String> _parseTasks(String responseBody) {
+    final data = jsonDecode(responseBody);
+
+    final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
+
+    if (text == null) return [];
+
+    final parsed = jsonDecode(text);
+    final tasks = parsed['tasks'] as List<dynamic>? ?? [];
+
+    return tasks.map((e) => e.toString().trim()).toList();
+  }
+
+  String _buildHistoryString(List<DayTasks> days) {
+    if (days.isEmpty) return "История пуста.";
 
     final buffer = StringBuffer();
-    for (final day in recent) {
+
+    for (final day in days) {
       buffer.writeln('Дата: ${day.date}');
       for (final task in day.tasks) {
-        buffer.writeln('  ${task.completed ? "[DONE]" : "[FAILED]"} ${task.text}');
+        buffer.writeln('${task.completed ? "[DONE]" : "[FAILED]"} ${task.text}');
       }
       buffer.writeln('---');
     }
+
     return buffer.toString();
-  }
-
-  Future<DayTasks> generateDayTasks(String goals, List<DayTasks> history, int count) async {
-    final lines = await generateRawTasks(
-      goals: goals,
-      allHistory: history,
-      taskCount: count,
-    );
-
-    final today = StorageService.getTodayKey();
-    final tasks = lines
-        .asMap()
-        .entries
-        .map((e) => Task(
-              id: '$today-${e.key}',
-              text: e.value,
-              date: today,
-            ))
-        .toList();
-
-    return DayTasks(date: today, tasks: tasks);
   }
 
   Future<String> transcribeAudio(String filePath) async {
     final request = http.MultipartRequest('POST', Uri.parse(_transcribeUrl));
     request.headers['Authorization'] = 'Bearer $apiKey';
-    request.files.add(await http.MultipartFile.fromPath('file', filePath, filename: 'recording.m4a'));
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
     request.fields['model'] = 'gpt-4o-transcribe';
 
     final streamed = await request.send();
     final responseBody = await streamed.stream.bytesToString();
 
-    if (streamed.statusCode != 200) {
-      throw Exception('Transcription failed: ${streamed.statusCode}');
-    }
+    if (streamed.statusCode != 200) throw Exception('Transcribe failed');
 
+    return await compute(_parseTranscribeResponse, responseBody);
+  }
+
+  static String _parseTranscribeResponse(String responseBody) {
     final data = jsonDecode(responseBody);
     return data['text'] as String? ?? '';
   }
