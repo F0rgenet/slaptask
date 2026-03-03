@@ -4,11 +4,14 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/logger.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../theme.dart';
 import '../services/api_service.dart';
+
+var logger = Logger();
 
 class OnboardingScreen extends StatefulWidget {
   final String apiKey;
@@ -121,12 +124,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         _editController.text = text;
         _phase = 'review';
       });
-    } catch (_) {
+    } catch (error) {
       setState(() {
         _transcript = '';
         _editController.text = '';
         _phase = 'review';
       });
+      logger.t(error);
     }
   }
 
@@ -474,19 +478,4 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
       ],
     );
   }
-}
-
-class CustomAnimatedBuilder extends AnimatedWidget {
-  final Widget Function(BuildContext, Widget?) builder;
-
-  const CustomAnimatedBuilder({
-    super.key,
-    required super.listenable,
-    required this.builder,
-  });
-
-  @override
-  Widget build(BuildContext context) => builder(context, null);
-
-  Animation<double> get animation => listenable as Animation<double>;
 }

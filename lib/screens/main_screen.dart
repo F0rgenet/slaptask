@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/logger.dart';
 import '../theme.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
 import '../widgets/task_item.dart';
 import '../widgets/task_history.dart';
+
+var logger = Logger();
 
 class MainScreen extends StatefulWidget {
   final AppState state;
@@ -76,8 +79,9 @@ class _MainScreenState extends State<MainScreen> {
       final updated = AppState(goals: widget.state.goals, days: updatedDays);
       widget.onStateChanged(updated);
       await StorageService.save(updated);
-    } catch (_) {
-      setState(() => _error = 'Ошибка генерации задач. Попробуйте еще раз.');
+    } catch (error) {
+      setState(() => _error = 'Ошибка генерации задач. Попробуйте ещё раз.');
+      logger.t(error);
     } finally {
       setState(() => _isGenerating = false);
     }

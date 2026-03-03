@@ -7,7 +7,7 @@ class ApiService {
   static const _chatUrl = 'https://openai.api.proxyapi.ru/v1/chat/completions';
   static const _transcribeUrl = 'https://api.proxyapi.ru/openai/v1/audio/transcriptions';
 
-  static const _modelName = 'gemini/gemini-2.0-flash-exp';
+  static const _modelName = 'gemini/gemini-3-flash-preview';
 
   final String apiKey;
 
