@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Task {
 
- String get id; String get text; bool get completed; String get date;
+@HiveField(0) String get id;@HiveField(1) String get text;@HiveField(2) bool get completed;@HiveField(3) String get date;
 /// Create a copy of Task
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TaskCopyWith<$Res>  {
   factory $TaskCopyWith(Task value, $Res Function(Task) _then) = _$TaskCopyWithImpl;
 @useResult
 $Res call({
- String id, String text, bool completed, String date
+@HiveField(0) String id,@HiveField(1) String text,@HiveField(2) bool completed,@HiveField(3) String date
 });
 
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String text,  bool completed,  String date)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String id, @HiveField(1)  String text, @HiveField(2)  bool completed, @HiveField(3)  String date)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Task() when $default != null:
 return $default(_that.id,_that.text,_that.completed,_that.date);case _:
@@ -174,7 +174,7 @@ return $default(_that.id,_that.text,_that.completed,_that.date);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String text,  bool completed,  String date)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String id, @HiveField(1)  String text, @HiveField(2)  bool completed, @HiveField(3)  String date)  $default,) {final _that = this;
 switch (_that) {
 case _Task():
 return $default(_that.id,_that.text,_that.completed,_that.date);}
@@ -191,7 +191,7 @@ return $default(_that.id,_that.text,_that.completed,_that.date);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String text,  bool completed,  String date)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String id, @HiveField(1)  String text, @HiveField(2)  bool completed, @HiveField(3)  String date)?  $default,) {final _that = this;
 switch (_that) {
 case _Task() when $default != null:
 return $default(_that.id,_that.text,_that.completed,_that.date);case _:
@@ -206,13 +206,13 @@ return $default(_that.id,_that.text,_that.completed,_that.date);case _:
 @JsonSerializable()
 
 class _Task implements Task {
-  const _Task({required this.id, required this.text, this.completed = false, required this.date});
+   _Task({@HiveField(0) required this.id, @HiveField(1) required this.text, @HiveField(2) this.completed = false, @HiveField(3) required this.date});
   factory _Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
 
-@override final  String id;
-@override final  String text;
-@override@JsonKey() final  bool completed;
-@override final  String date;
+@override@HiveField(0) final  String id;
+@override@HiveField(1) final  String text;
+@override@JsonKey()@HiveField(2) final  bool completed;
+@override@HiveField(3) final  String date;
 
 /// Create a copy of Task
 /// with the given fields replaced by the non-null parameter values.
@@ -247,7 +247,7 @@ abstract mixin class _$TaskCopyWith<$Res> implements $TaskCopyWith<$Res> {
   factory _$TaskCopyWith(_Task value, $Res Function(_Task) _then) = __$TaskCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String text, bool completed, String date
+@HiveField(0) String id,@HiveField(1) String text,@HiveField(2) bool completed,@HiveField(3) String date
 });
 
 

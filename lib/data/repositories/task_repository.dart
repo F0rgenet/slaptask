@@ -1,4 +1,5 @@
 import '../models/app_state.dart';
+import '../models/app_settings.dart';
 import '../models/day_tasks.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
@@ -9,12 +10,39 @@ class TaskRepository {
 
   TaskRepository(this._storage, this._api);
 
-  AppState loadState() => _storage.load();
+  AppState loadState() {
+    final settings = _storage.loadSettings();
+    final history = _storage.loadHistory();
 
-  Future<void> saveState(AppState state) => _storage.save(state);
+    return AppState(
+      goals: settings.goals,
+      days: history,
+      taskCount: settings.taskCount,
+      frequencyHours: settings.frequencyHours,
+      unlimitedRegen: settings.unlimitedRegen,
+    );
+  }
+
+  Future<void> saveSettingsOnly(AppState state) async {
+    final settings = AppSettings(
+      goals: state.goals,
+      taskCount: state.taskCount,
+      frequencyHours: state.frequencyHours,
+      unlimitedRegen: state.unlimitedRegen,
+    );
+    await _storage.saveSettings(settings);
+  }
+
+  Future<void> saveFullState(AppState state) async {
+    await saveSettingsOnly(state);
+  }
+
+  Future<void> resetData() async {
+    await _storage.clearAll();
+  }
 
   Future<AppState> generateTodayTasks(AppState currentState) async {
-    if (currentState.goals == null) throw Exception("No goals set");
+    if (currentState.goals == null) throw Exception("No goals");
 
     final newDay = await _api.generateDayTasks(
       currentState.goals!,
@@ -22,40 +50,31 @@ class TaskRepository {
       currentState.taskCount,
     );
 
-    final todayKey = StorageService.getTodayKey();
-    final existingIndex = currentState.days.indexWhere((d) => d.date == todayKey);
-    
-    List<DayTasks> updatedDays = List.from(currentState.days);
-    
-    if (existingIndex >= 0) {
-      updatedDays[existingIndex] = newDay.copyWith(
-        regenerated: !currentState.unlimitedRegen,
-      );
-    } else {
-      updatedDays = [...currentState.days, newDay];
-    }
+    await _storage.saveDay(newDay);
 
-    final newState = currentState.copyWith(days: updatedDays);
-    await saveState(newState);
-    return newState;
+    return loadState(); 
   }
 
   Future<AppState> toggleTask(AppState currentState, String taskId) async {
     final todayKey = StorageService.getTodayKey();
-    
-    final updatedDays = currentState.days.map((day) {
-      if (day.date != todayKey) return day;
-      
-      final updatedTasks = day.tasks.map((t) {
-        if (t.id != taskId) return t;
-        return t.copyWith(completed: !t.completed);
-      }).toList();
+  
+    final dayIndex = currentState.days.indexWhere((d) => d.date == todayKey);
+    if (dayIndex == -1) return currentState;
 
-      return day.copyWith(tasks: updatedTasks);
+    final currentDay = currentState.days[dayIndex];
+    
+    final updatedTasks = currentDay.tasks.map((t) {
+      if (t.id != taskId) return t;
+      return t.copyWith(completed: !t.completed);
     }).toList();
 
-    final newState = currentState.copyWith(days: updatedDays);
-    await saveState(newState);
-    return newState;
+    final updatedDay = currentDay.copyWith(tasks: updatedTasks);
+
+    await _storage.saveDay(updatedDay);
+
+    final updatedDays = List<DayTasks>.from(currentState.days);
+    updatedDays[dayIndex] = updatedDay;
+    
+    return currentState.copyWith(days: updatedDays);
   }
 }

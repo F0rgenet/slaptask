@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'presentation/theme.dart';
@@ -17,7 +16,6 @@ import 'presentation/screens/onboarding_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 
 const _backgroundTaskName = 'slaptask-daily-generate';
-
 final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
 
 const _notificationInitializationSettings = InitializationSettings(
@@ -46,9 +44,9 @@ void callbackDispatcher() {
         if (alreadyExists) return true;
 
         await repo.generateTodayTasks(state);
-        await showTestNotification(body: '${state.taskCount} задач готовы. Действуй или страдай.');
+        await showTestNotification(body: '${state.taskCount} задач готовы. Живо за работу.');
       } catch (e) {
-        debugPrint("Background task error: $e");
+        return false;
       }
     }
     return true;
@@ -68,7 +66,6 @@ Future<void> showTestNotification({String? body}) async {
         importance: Importance.high,
         priority: Priority.high,
       ),
-      linux: LinuxNotificationDetails(),
     ),
   );
 }
@@ -99,17 +96,18 @@ void main() async {
   await dotenv.load(fileName: ".env");
   await _notifications.initialize(settings: _notificationInitializationSettings);
 
+  final storageService = await StorageService.init();
+
   if (Platform.isAndroid || Platform.isIOS) {
     await Workmanager().initialize(callbackDispatcher);
   }
 
-  final prefs = await SharedPreferences.getInstance();
-  final storageService = StorageService(prefs);
   final apiService = ApiService(dotenv.env['PROXYAPI_KEY'] ?? '');
   final audioService = AudioService();
   final taskRepository = TaskRepository(storageService, apiService);
 
-  schedulePeriodicTask(storageService.load().frequencyHours);
+  final settings = storageService.loadSettings();
+  schedulePeriodicTask(settings.frequencyHours);
 
   runApp(SlapTaskApp(
     storageService: storageService,

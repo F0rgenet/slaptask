@@ -26,7 +26,7 @@ static void my_application_activate(GApplication* application) {
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
   GError* error = NULL;
-  GdkPixbuf* icon = gdk_pixbuf_new_from_file("data/flutter_assets/assets/icons/icon.png", &error);
+  GdkPixbuf* icon = gdk_pixbuf_new_from_file("assets/icons/icon.png", &error);
   if (icon) {
       gtk_window_set_icon(window, icon);
       g_object_unref(icon);

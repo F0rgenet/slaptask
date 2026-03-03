@@ -79,7 +79,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
   Future<void> _onSaveGoals(_SaveGoals event, Emitter<OnboardingState> emit) async {
     final current = _repository.loadState();
-    await _repository.saveState(current.copyWith(goals: event.goals));
+    _repository.saveSettingsOnly(current.copyWith(goals: event.goals));
     emit(const OnboardingState.success());
   }
 

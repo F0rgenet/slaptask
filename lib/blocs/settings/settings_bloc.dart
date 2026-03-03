@@ -28,7 +28,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _updateState(Emitter<SettingsState> emit, AppState newState) async {
-    await _repository.saveState(newState);
+    await _repository.saveSettingsOnly(newState);
     emit(SettingsState.loaded(appState: newState));
   }
 
@@ -62,7 +62,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onResetData(_ResetData event, Emitter<SettingsState> emit) async {
-    await _repository.saveState(const AppState());
+    await _repository.resetData();
     emit(const SettingsState.dataReset());
   }
 
