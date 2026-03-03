@@ -55,16 +55,31 @@ class DayTasks {
 class AppState {
   String? goals;
   List<DayTasks> days;
+  int taskCount;
+  int frequencyHours;
+  bool unlimitedRegen;
 
-  AppState({this.goals, List<DayTasks>? days}) : days = days ?? [];
+  AppState({
+    this.goals,
+    List<DayTasks>? days,
+    this.taskCount = 5,
+    this.frequencyHours = 24,
+    this.unlimitedRegen = false,
+  }) : days = days ?? [];
 
   Map<String, dynamic> toJson() => {
         'goals': goals,
         'days': days.map((d) => d.toJson()).toList(),
+        'taskCount': taskCount,
+        'frequencyHours': frequencyHours,
+        'unlimitedRegen': unlimitedRegen,
       };
 
   factory AppState.fromJson(Map<String, dynamic> json) => AppState(
         goals: json['goals'] as String?,
         days: (json['days'] as List?)?.map((d) => DayTasks.fromJson(d)).toList() ?? [],
+        taskCount: json['taskCount'] as int? ?? 5,
+        frequencyHours: json['frequencyHours'] as int? ?? 24,
+        unlimitedRegen: json['unlimitedRegen'] as bool? ?? false,
       );
 }

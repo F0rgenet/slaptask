@@ -13,21 +13,21 @@ class ApiService {
 
   ApiService(this.apiKey);
 
-  static const _systemPrompt =
-      'Ты — SlapTask, жесткий, справедливый и бескомпромиссный ИИ-тренер по дисциплине.\n'
-      'Твоя задача — заставить пользователя двигаться к целям, невзирая на оправдания.\n'
-      'Проанализируй его цели и историю задач (где [DONE] — успех, [FAILED] — провал).\n'
-      '1. Если пользователь часто проваливается: дай задачи чуть проще, но критически важные, чтобы вернуть режим. Будь строг.\n'
-      '2. Если пользователь справляется: повышай планку, не давай расслабиться.\n'
-      'Сгенерируй ровно 5 конкретных, измеримых задач на сегодня (действия, а не размышления).\n'
-      'Формат ответа: ТОЛЬКО 5 строк текста. Без нумерации (1., -), без кавычек, без приветствий и мотивационной воды.';
-
   static Future<List<String>> generateRawTasks({
     required String apiKey,
     required String goals,
     required List<DayTasks> allHistory,
+    required int taskCount,
   }) async {
     final historyStr = _buildHistoryString(allHistory);
+
+    final systemPrompt = 'Ты — SlapTask, жесткий, справедливый и бескомпромиссный ИИ-тренер по дисциплине.\n'
+        'Твоя задача — заставить пользователя двигаться к целям, невзирая на оправдания.\n'
+        'Проанализируй его цели и историю задач (где [DONE] — успех, [FAILED] — провал).\n'
+        '1. Если пользователь часто проваливается: дай задачи чуть проще, но критически важные, чтобы вернуть режим. Будь строг.\n'
+        '2. Если пользователь справляется: повышай планку, не давай расслабиться.\n'
+        'Сгенерируй ровно $taskCount конкретных, измеримых задач на сегодня (действия, а не размышления).\n'
+        'Формат ответа: ТОЛЬКО $taskCount строк текста. Без нумерации (1., -), без кавычек, без приветствий и мотивационной воды.';
 
     final response = await http.post(
       Uri.parse(_chatUrl),
@@ -38,7 +38,7 @@ class ApiService {
       body: jsonEncode({
         'model': _modelName,
         'messages': [
-          {'role': 'system', 'content': _systemPrompt},
+          {'role': 'system', 'content': systemPrompt},
           {'role': 'user', 'content': 'МОИ ЦЕЛИ:\n$goals\n\nИСТОРИЯ ЗАДАЧ:\n$historyStr'},
         ],
         'temperature': 0.7,
@@ -57,13 +57,13 @@ class ApiService {
         .split('\n')
         .map((l) => l.replaceAll(RegExp(r'^\d+[.)]\s*'), '').replaceAll(RegExp(r'^[-*]\s*'), '').trim())
         .where((l) => l.isNotEmpty)
-        .take(5)
+        .take(taskCount)
         .toList();
   }
 
   static String _buildHistoryString(List<DayTasks> allDays) {
     final recent = allDays.length > 7 ? allDays.sublist(allDays.length - 7) : allDays;
-    
+
     if (recent.isEmpty) return "История пуста (первый день).";
 
     final buffer = StringBuffer();
@@ -82,15 +82,20 @@ class ApiService {
       apiKey: apiKey,
       goals: state.goals ?? '',
       allHistory: state.days,
+      taskCount: state.taskCount,
     );
 
-    final today = StorageService.getTodayKey(); 
-    
-    final tasks = lines.asMap().entries.map((e) => Task(
-          id: '$today-${e.key}',
-          text: e.value,
-          date: today,
-        )).toList();
+    final today = StorageService.getTodayKey();
+
+    final tasks = lines
+        .asMap()
+        .entries
+        .map((e) => Task(
+              id: '$today-${e.key}',
+              text: e.value,
+              date: today,
+            ))
+        .toList();
 
     return DayTasks(date: today, tasks: tasks);
   }

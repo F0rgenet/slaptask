@@ -5,8 +5,8 @@ import '../theme.dart';
 import '../models.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
-import '../widgets/task_item.dart';
-import '../widgets/task_history.dart';
+import '../widgets/task_item_widget.dart';
+import '../widgets/task_history_widget.dart';
 
 var logger = Logger();
 
@@ -14,14 +14,14 @@ class MainScreen extends StatefulWidget {
   final AppState state;
   final String apiKey;
   final void Function(AppState) onStateChanged;
-  final VoidCallback onEditGoals;
+  final VoidCallback onOpenSettings;
 
   const MainScreen({
     super.key,
     required this.state,
     required this.apiKey,
     required this.onStateChanged,
-    required this.onEditGoals,
+    required this.onOpenSettings,
   });
 
   @override
@@ -37,23 +37,36 @@ class _MainScreenState extends State<MainScreen> {
   int get _completedCount => _todayTasks?.tasks.where((t) => t.completed).length ?? 0;
   int get _totalCount => _todayTasks?.tasks.length ?? 0;
   bool get _anyChecked => _completedCount > 0;
-  bool get _canRegenerate => _todayTasks != null && !_todayTasks!.regenerated && !_anyChecked;
+
+  bool get _canRegenerate {
+    if (_todayTasks == null) return false;
+    if (_anyChecked) return false; // Если хотя бы одна задача выполнена - регенерация запрещена
+    if (widget.state.unlimitedRegen) return true; // Настройка для дебага обходит лимит
+    return !_todayTasks!.regenerated;
+  }
 
   void _toggleTask(String id) {
     final todayKey = StorageService.getTodayKey();
+
+    // Передаем все свойства состояния (включая новые настройки)
     final updated = AppState(
       goals: widget.state.goals,
+      taskCount: widget.state.taskCount,
+      frequencyHours: widget.state.frequencyHours,
+      unlimitedRegen: widget.state.unlimitedRegen,
       days: widget.state.days.map((day) {
         if (day.date != todayKey) return day;
         return DayTasks(
           date: day.date,
-          tasks: day.tasks.map((t) => t.id == id ? (Task(id: t.id, text: t.text, completed: !t.completed, date: t.date)) : t).toList(),
+          tasks: day.tasks
+              .map((t) => t.id == id ? (Task(id: t.id, text: t.text, completed: !t.completed, date: t.date)) : t)
+              .toList(),
           regenerated: day.regenerated,
         );
       }).toList(),
     );
+
     widget.onStateChanged(updated);
-    StorageService.save(updated);
   }
 
   Future<void> _handleGenerate() async {
@@ -71,14 +84,25 @@ class _MainScreenState extends State<MainScreen> {
       List<DayTasks> updatedDays;
       if (existingIndex >= 0) {
         updatedDays = List.from(widget.state.days);
-        updatedDays[existingIndex] = DayTasks(date: newDay.date, tasks: newDay.tasks, regenerated: true);
+        // Помечаем как регенерированные только если unlimitedRegen не включен
+        updatedDays[existingIndex] = DayTasks(
+          date: newDay.date,
+          tasks: newDay.tasks,
+          regenerated: !widget.state.unlimitedRegen,
+        );
       } else {
         updatedDays = [...widget.state.days, newDay];
       }
 
-      final updated = AppState(goals: widget.state.goals, days: updatedDays);
+      final updated = AppState(
+        goals: widget.state.goals,
+        taskCount: widget.state.taskCount,
+        frequencyHours: widget.state.frequencyHours,
+        unlimitedRegen: widget.state.unlimitedRegen,
+        days: updatedDays,
+      );
+
       widget.onStateChanged(updated);
-      await StorageService.save(updated);
     } catch (error) {
       setState(() => _error = 'Ошибка генерации задач. Попробуйте ещё раз.');
       logger.t(error);
@@ -97,7 +121,20 @@ class _MainScreenState extends State<MainScreen> {
   String get _dateStr {
     final now = DateTime.now();
     const weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const months = [
+      'января',
+      'февраля',
+      'марта',
+      'апреля',
+      'мая',
+      'июня',
+      'июля',
+      'августа',
+      'сентября',
+      'октября',
+      'ноября',
+      'декабря'
+    ];
     return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
   }
 
@@ -168,13 +205,13 @@ class _MainScreenState extends State<MainScreen> {
           ),
           const Spacer(),
           GestureDetector(
-            onTap: widget.onEditGoals,
+            onTap: widget.onOpenSettings,
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Icon(Icons.tune_rounded, size: 18, color: SlapTheme.mutedForeground),
+              child: const Icon(Icons.settings_outlined, size: 18, color: SlapTheme.mutedForeground),
             ),
           ),
         ],
@@ -256,7 +293,10 @@ class _MainScreenState extends State<MainScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _isGenerating
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: SlapTheme.primaryForeground))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: SlapTheme.primaryForeground))
                       : const Icon(Icons.flash_on_rounded, size: 16),
                   const SizedBox(width: 8),
                   Text(
@@ -294,7 +334,8 @@ class _MainScreenState extends State<MainScreen> {
               '$_completedCount/$_totalCount',
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 11,
-                color: _completedCount == _totalCount && _totalCount > 0 ? SlapTheme.success : SlapTheme.mutedForeground,
+                color:
+                    _completedCount == _totalCount && _totalCount > 0 ? SlapTheme.success : SlapTheme.mutedForeground,
               ),
             ),
             const SizedBox(width: 12),
@@ -364,7 +405,10 @@ class _MainScreenState extends State<MainScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _isGenerating
-                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: SlapTheme.mutedForeground))
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 1.5, color: SlapTheme.mutedForeground))
                       : const Icon(Icons.refresh_rounded, size: 14, color: SlapTheme.mutedForeground),
                   const SizedBox(width: 8),
                   Text(

@@ -60,17 +60,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
   }
 
   Future<void> _startRecording() async {
-    if (!kIsWeb && !Platform.isLinux) { 
-    final status = await Permission.microphone.request();
-    if (!status.isGranted) {
-      setState(() {
-        _transcript = '';
-        _editController.text = '';
-        _phase = 'review';
-      });
-      return;
+    if (!kIsWeb && !Platform.isLinux) {
+      final status = await Permission.microphone.request();
+      if (!status.isGranted) {
+        setState(() {
+          _transcript = '';
+          _editController.text = '';
+          _phase = 'review';
+        });
+        return;
+      }
     }
-  }
 
     final dir = await getApplicationDocumentsDirectory();
     _recordingPath = '${dir.path}/recording.m4a';
@@ -408,7 +408,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
           maxLines: 7,
           style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground, height: 1.5),
           decoration: const InputDecoration(
-            hintText: 'Я хочу выучить немецкий, тренироваться 4 раза в неделю, закончить пет-проект, читать 2 книги в месяц...',
+            hintText:
+                'Я хочу выучить немецкий, тренироваться 4 раза в неделю, закончить пет-проект, читать 2 книги в месяц...',
           ),
         ),
         if (_transcript.isNotEmpty) ...[
@@ -436,7 +437,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         SizedBox(
           height: 56,
           child: ElevatedButton(
-            onPressed: _editController.text.trim().isEmpty ? null : () => widget.onGoalsSaved(_editController.text.trim()),
+            onPressed:
+                _editController.text.trim().isEmpty ? null : () => widget.onGoalsSaved(_editController.text.trim()),
             style: ElevatedButton.styleFrom(
               backgroundColor: SlapTheme.primary,
               foregroundColor: SlapTheme.primaryForeground,

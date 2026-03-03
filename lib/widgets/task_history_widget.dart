@@ -20,14 +20,14 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
     final date = DateTime.parse(dateStr);
     final now = DateTime.now();
     final yesterday = DateTime(now.year, now.month, now.day - 1);
-    
+
     if (date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day) {
       return 'Вчера';
     }
-    
+
     const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-    
+
     return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
   }
 
@@ -144,42 +144,46 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Column(
-                        children: day.tasks.map((task) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: task.completed
-                                    ? Container(
-                                        width: 16,
-                                        height: 16,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: SlapTheme.success.withValues(alpha: 0.2),
+                        children: day.tasks
+                            .map((task) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: task.completed
+                                            ? Container(
+                                                width: 16,
+                                                height: 16,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: SlapTheme.success.withValues(alpha: 0.2),
+                                                ),
+                                                alignment: Alignment.center,
+                                                child:
+                                                    const Icon(Icons.check_rounded, size: 10, color: SlapTheme.success),
+                                              )
+                                            : Icon(Icons.circle_outlined,
+                                                size: 16, color: SlapTheme.destructive.withValues(alpha: 0.5)),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          task.text,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            height: 1.5,
+                                            color: SlapTheme.mutedForeground,
+                                            decoration: task.completed ? TextDecoration.lineThrough : null,
+                                            decorationColor: SlapTheme.mutedForeground.withValues(alpha: 0.3),
+                                          ),
                                         ),
-                                        alignment: Alignment.center,
-                                        child: const Icon(Icons.check_rounded, size: 10, color: SlapTheme.success),
-                                      )
-                                    : Icon(Icons.circle_outlined, size: 16, color: SlapTheme.destructive.withValues(alpha: 0.5)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  task.text,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    height: 1.5,
-                                    color: SlapTheme.mutedForeground,
-                                    decoration: task.completed ? TextDecoration.lineThrough : null,
-                                    decorationColor: SlapTheme.mutedForeground.withValues(alpha: 0.3),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )).toList(),
+                                ))
+                            .toList(),
                       ),
                     ),
                 ],

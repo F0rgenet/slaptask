@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +13,8 @@ import 'services/storage_service.dart';
 import 'services/api_service.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/main_screen.dart';
-import 'screens/goals_editor_screen.dart';
+import 'screens/settings_screen.dart';
+import 'blocs/settings/settings_bloc.dart';
 
 const _backgroundTaskName = 'slaptask-daily-generate';
 
@@ -47,33 +49,17 @@ void callbackDispatcher() {
           apiKey: apiKey,
           goals: state.goals!,
           allHistory: state.days,
+          taskCount: state.taskCount,
         );
 
         if (rawTaskLines.isNotEmpty) {
-          final tasks = rawTaskLines.asMap().entries.map((e) => Task(
-            id: '$today-${e.key}', 
-            text: e.value, 
-            date: today
-          )).toList();
+          final tasks =
+              rawTaskLines.asMap().entries.map((e) => Task(id: '$today-${e.key}', text: e.value, date: today)).toList();
 
           state.days.add(DayTasks(date: today, tasks: tasks));
           await prefs.setString('slaptask-state', jsonEncode(state.toJson()));
 
-          await _notifications.initialize(settings: _notificationInitializationSettings);
-          await _notifications.show(
-            id: 0,
-            title: 'SlapTask',
-            body: '5 задач готовы. Действуй или страдай.',
-            notificationDetails: const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'slaptask_channel',
-                'SlapTask Daily',
-                importance: Importance.high,
-                priority: Priority.high,
-              ),
-              linux: LinuxNotificationDetails(),
-            ),
-          );
+          await showTestNotification(body: '${state.taskCount} задач готовы. Действуй или страдай.');
         }
       } catch (e) {
         debugPrint("Background task error: $e");
@@ -83,22 +69,44 @@ void callbackDispatcher() {
   });
 }
 
+Future<void> showTestNotification({String? body}) async {
+  await _notifications.initialize(settings: _notificationInitializationSettings);
+  await _notifications.show(
+    id: 0,
+    title: 'SlapTask',
+    body: '5 задач готовы. Действуй или страдай.',
+    notificationDetails: const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'slaptask_channel',
+        'SlapTask Daily',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      linux: LinuxNotificationDetails(),
+    ),
+  );
+}
+
+void schedulePeriodicTask(int hours) {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  Workmanager().cancelByUniqueName(_backgroundTaskName);
+  Workmanager().registerPeriodicTask(
+    _backgroundTaskName,
+    _backgroundTaskName,
+    frequency: Duration(hours: hours),
+    initialDelay: _getDelayUntil10AM(),
+    constraints: Constraints(networkType: NetworkType.connected),
+  );
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
   await dotenv.load(fileName: ".env");
-
   await _notifications.initialize(settings: _notificationInitializationSettings);
 
   if (Platform.isAndroid || Platform.isIOS) {
     await Workmanager().initialize(callbackDispatcher);
-    await Workmanager().registerPeriodicTask(
-      _backgroundTaskName,
-      _backgroundTaskName,
-      frequency: const Duration(hours: 24),
-      initialDelay: _getDelayUntil10AM(),
-      constraints: Constraints(networkType: NetworkType.connected),
-    );
+    schedulePeriodicTask(24);
   }
 
   runApp(const SlapTaskApp());
@@ -134,6 +142,7 @@ class _SlapTaskAppState extends State<SlapTaskApp> {
 
   Future<void> _loadData() async {
     _state = await StorageService.load();
+    schedulePeriodicTask(_state.frequencyHours);
     setState(() {
       if (_state.goals == null || _state.goals!.isEmpty) {
         _screen = 'onboarding';
@@ -144,7 +153,7 @@ class _SlapTaskAppState extends State<SlapTaskApp> {
   }
 
   void _onGoalsSaved(String goals) {
-    _state = AppState(goals: goals, days: _state.days);
+    _state.goals = goals;
     StorageService.save(_state);
     setState(() => _screen = 'main');
   }
@@ -152,12 +161,6 @@ class _SlapTaskAppState extends State<SlapTaskApp> {
   void _onStateChanged(AppState updated) {
     setState(() => _state = updated);
     StorageService.save(updated);
-  }
-
-  void _onGoalsEdited(String goals) {
-    _state = AppState(goals: goals, days: _state.days);
-    StorageService.save(_state);
-    setState(() => _screen = 'main');
   }
 
   @override
@@ -182,11 +185,16 @@ class _SlapTaskAppState extends State<SlapTaskApp> {
         return _buildLoading();
       case 'onboarding':
         return OnboardingScreen(apiKey: _apiKey, onGoalsSaved: _onGoalsSaved);
-      case 'edit-goals':
-        return GoalsEditorScreen(
-          currentGoals: _state.goals ?? '',
-          onSave: _onGoalsEdited,
-          onBack: () => setState(() => _screen = 'main'),
+      case 'settings':
+        return BlocProvider(
+          create: (context) => SettingsBloc(
+            appState: _state,
+            onStateChanged: _onStateChanged,
+          ),
+          child: SettingsScreen(
+            onBack: () => setState(() => _screen = 'main'),
+            onResetComplete: () => setState(() => _screen = 'onboarding'),
+          ),
         );
       case 'main':
       default:
@@ -194,7 +202,7 @@ class _SlapTaskAppState extends State<SlapTaskApp> {
           state: _state,
           apiKey: _apiKey,
           onStateChanged: _onStateChanged,
-          onEditGoals: () => setState(() => _screen = 'edit-goals'),
+          onOpenSettings: () => setState(() => _screen = 'settings'),
         );
     }
   }
