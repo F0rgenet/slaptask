@@ -13,6 +13,6 @@ sealed class AppState with _$AppState {
     @Default(24) int frequencyHours,
     @Default(false) bool unlimitedRegen,
   }) = _AppState;
-  
+
   factory AppState.fromJson(Map<String, dynamic> json) => _$AppStateFromJson(json);
 }

@@ -7,7 +7,11 @@ import 'package:slaptask/services/audio_service.dart';
 import 'package:slaptask/services/storage_service.dart';
 
 class MockStorageService extends Mock implements StorageService {}
+
 class MockApiService extends Mock implements ApiService {}
+
 class MockAudioService extends Mock implements AudioService {}
+
 class MockTaskRepository extends Mock implements TaskRepository {}
+
 class MockTaskBloc extends MockBloc<TaskEvent, TaskState> implements TaskBloc {}

@@ -109,12 +109,14 @@ void main() async {
   final settings = storageService.loadSettings();
   schedulePeriodicTask(settings.frequencyHours);
 
-  runApp(SlapTaskApp(
-    storageService: storageService,
-    apiService: apiService,
-    audioService: audioService,
-    taskRepository: taskRepository,
-  ));
+  runApp(
+    SlapTaskApp(
+      storageService: storageService,
+      apiService: apiService,
+      audioService: audioService,
+      taskRepository: taskRepository,
+    ),
+  );
 }
 
 class SlapTaskApp extends StatelessWidget {
@@ -141,9 +143,7 @@ class SlapTaskApp extends StatelessWidget {
         RepositoryProvider.value(value: taskRepository),
       ],
       child: MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => TaskBloc(taskRepository)..add(const TaskEvent.load())),
-        ],
+        providers: [BlocProvider(create: (_) => TaskBloc(taskRepository)..add(const TaskEvent.load()))],
         child: MaterialApp(
           title: 'SlapTask',
           theme: SlapTheme.theme,
@@ -213,9 +213,7 @@ class _AppCoordinatorState extends State<AppCoordinator> {
             );
           case 'main':
           default:
-            return MainScreen(
-              onOpenSettings: () => setState(() => _screen = 'settings'),
-            );
+            return MainScreen(onOpenSettings: () => setState(() => _screen = 'settings'));
         }
       },
     );

@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../data/models/app_state.dart';
 import '../../data/repositories/task_repository.dart';
-import '../../main.dart'; 
+import '../../main.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';

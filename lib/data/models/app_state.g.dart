@@ -8,11 +8,7 @@ part of 'app_state.dart';
 
 _AppState _$AppStateFromJson(Map<String, dynamic> json) => _AppState(
   goals: json['goals'] as String?,
-  days:
-      (json['days'] as List<dynamic>?)
-          ?.map((e) => DayTasks.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
+  days: (json['days'] as List<dynamic>?)?.map((e) => DayTasks.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
   taskCount: (json['taskCount'] as num?)?.toInt() ?? 5,
   frequencyHours: (json['frequencyHours'] as num?)?.toInt() ?? 24,
   unlimitedRegen: json['unlimitedRegen'] as bool? ?? false,

@@ -13,9 +13,7 @@ class DayTasksAdapter extends TypeAdapter<DayTasks> {
   @override
   DayTasks read(BinaryReader reader) {
     final numOfFields = reader.readByte();
-    final fields = <int, dynamic>{
-      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
-    };
+    final fields = <int, dynamic>{for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read()};
     return DayTasks(
       date: fields[0] as String,
       tasks: (fields[1] as List).cast<Task>(),
@@ -40,10 +38,7 @@ class DayTasksAdapter extends TypeAdapter<DayTasks> {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DayTasksAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
+      identical(this, other) || other is DayTasksAdapter && runtimeType == other.runtimeType && typeId == other.typeId;
 }
 
 // **************************************************************************
@@ -52,9 +47,7 @@ class DayTasksAdapter extends TypeAdapter<DayTasks> {
 
 _DayTasks _$DayTasksFromJson(Map<String, dynamic> json) => _DayTasks(
   date: json['date'] as String,
-  tasks: (json['tasks'] as List<dynamic>)
-      .map((e) => Task.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  tasks: (json['tasks'] as List<dynamic>).map((e) => Task.fromJson(e as Map<String, dynamic>)).toList(),
   regenerated: json['regenerated'] as bool? ?? false,
 );
 

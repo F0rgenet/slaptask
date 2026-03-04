@@ -34,11 +34,7 @@ class TaskListWidget extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               'СЕГОДНЯ',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 10,
-                letterSpacing: 3,
-                color: SlapTheme.mutedForeground,
-              ),
+              style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.mutedForeground),
             ),
             const Spacer(),
             Text(
@@ -64,13 +60,12 @@ class TaskListWidget extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        ...dayTasks.tasks.map((task) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: TaskItemWidget(
-                task: task,
-                onToggle: () => onToggle(task.id),
-              ),
-            )),
+        ...dayTasks.tasks.map(
+          (task) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: TaskItemWidget(task: task, onToggle: () => onToggle(task.id)),
+          ),
+        ),
         if (completedCount == totalCount && totalCount > 0)
           Container(
             margin: const EdgeInsets.only(top: 16),
@@ -84,19 +79,12 @@ class TaskListWidget extends StatelessWidget {
               children: [
                 Text(
                   'ГОТОВО',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 12,
-                    letterSpacing: 3,
-                    color: SlapTheme.success,
-                  ),
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, letterSpacing: 3, color: SlapTheme.success),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Неплохо. Повтори это завтра.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: SlapTheme.mutedForeground,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 12, color: SlapTheme.mutedForeground),
                 ),
               ],
             ),
@@ -118,16 +106,13 @@ class TaskListWidget extends StatelessWidget {
                       ? const SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 1.5, color: SlapTheme.mutedForeground))
+                          child: CircularProgressIndicator(strokeWidth: 1.5, color: SlapTheme.mutedForeground),
+                        )
                       : const Icon(Icons.refresh_rounded, size: 14, color: SlapTheme.mutedForeground),
                   const SizedBox(width: 8),
                   Text(
                     isGenerating ? 'ПЕРЕГЕНЕРАЦИЯ...' : 'ЭТО МУСОР, ПЕРЕГЕНЕРИРУЙ',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      letterSpacing: 2,
-                      color: SlapTheme.mutedForeground,
-                    ),
+                    style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 2, color: SlapTheme.mutedForeground),
                   ),
                 ],
               ),
@@ -139,10 +124,7 @@ class TaskListWidget extends StatelessWidget {
             child: Center(
               child: Text(
                 'регенерация на сегодня использована',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 9,
-                  color: SlapTheme.mutedForeground.withValues(alpha: 0.5),
-                ),
+                style: GoogleFonts.jetBrainsMono(fontSize: 9, color: SlapTheme.mutedForeground.withValues(alpha: 0.5)),
               ),
             ),
           ),

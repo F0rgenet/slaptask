@@ -3,7 +3,6 @@ import '../data/models/app_settings.dart';
 import '../data/models/day_tasks.dart';
 import '../data/models/task.dart';
 
-
 class StorageService {
   static const _settingsBoxName = 'settings_box';
   static const _historyBoxName = 'history_box';
@@ -16,7 +15,7 @@ class StorageService {
 
   static Future<StorageService> init() async {
     await Hive.initFlutter();
-    
+
     Hive.registerAdapter(TaskAdapter());
     Hive.registerAdapter(DayTasksAdapter());
     Hive.registerAdapter(AppSettingsAdapter());

@@ -6,11 +6,7 @@ class GoalsEditorWidget extends StatefulWidget {
   final String currentGoals;
   final void Function(String) onSave;
 
-  const GoalsEditorWidget({
-    super.key,
-    required this.currentGoals,
-    required this.onSave,
-  });
+  const GoalsEditorWidget({super.key, required this.currentGoals, required this.onSave});
 
   @override
   State<GoalsEditorWidget> createState() => _GoalsEditorWidgetState();
@@ -38,20 +34,14 @@ class _GoalsEditorWidgetState extends State<GoalsEditorWidget> {
       children: [
         Text(
           'ЦЕЛИ',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 10,
-            letterSpacing: 3,
-            color: SlapTheme.mutedForeground,
-          ),
+          style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.mutedForeground),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _controller,
           maxLines: 5,
           style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground, height: 1.5),
-          decoration: const InputDecoration(
-            hintText: 'Опишите ваши цели...',
-          ),
+          decoration: const InputDecoration(hintText: 'Опишите ваши цели...'),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -64,10 +54,7 @@ class _GoalsEditorWidgetState extends State<GoalsEditorWidget> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
-            child: Text(
-              'СОХРАНИТЬ ЦЕЛИ',
-              style: GoogleFonts.jetBrainsMono(fontSize: 11, letterSpacing: 2),
-            ),
+            child: Text('СОХРАНИТЬ ЦЕЛИ', style: GoogleFonts.jetBrainsMono(fontSize: 11, letterSpacing: 2)),
           ),
         ),
       ],

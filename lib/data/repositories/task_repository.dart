@@ -44,25 +44,21 @@ class TaskRepository {
   Future<AppState> generateTodayTasks(AppState currentState) async {
     if (currentState.goals == null) throw Exception("No goals");
 
-    final newDay = await _api.generateDayTasks(
-      currentState.goals!,
-      currentState.days,
-      currentState.taskCount,
-    );
+    final newDay = await _api.generateDayTasks(currentState.goals!, currentState.days, currentState.taskCount);
 
     await _storage.saveDay(newDay);
 
-    return loadState(); 
+    return loadState();
   }
 
   Future<AppState> toggleTask(AppState currentState, String taskId) async {
     final todayKey = StorageService.getTodayKey();
-  
+
     final dayIndex = currentState.days.indexWhere((d) => d.date == todayKey);
     if (dayIndex == -1) return currentState;
 
     final currentDay = currentState.days[dayIndex];
-    
+
     final updatedTasks = currentDay.tasks.map((t) {
       if (t.id != taskId) return t;
       return t.copyWith(completed: !t.completed);
@@ -74,7 +70,7 @@ class TaskRepository {
 
     final updatedDays = List<DayTasks>.from(currentState.days);
     updatedDays[dayIndex] = updatedDay;
-    
+
     return currentState.copyWith(days: updatedDays);
   }
 }

@@ -28,10 +28,7 @@ void main() {
         return TaskBloc(mockRepo);
       },
       act: (bloc) => bloc.add(const TaskEvent.load()),
-      expect: () => [
-        const TaskState.loading(),
-        TaskState.loaded(appState: defaultState),
-      ],
+      expect: () => [const TaskState.loading(), TaskState.loaded(appState: defaultState)],
     );
 
     blocTest<TaskBloc, TaskState>(
@@ -39,10 +36,9 @@ void main() {
       build: () {
         final today = StorageService.getTodayKey();
         final generatedState = defaultState.copyWith(
-          days: [DayTasks(date: today, tasks: [])]
+          days: [DayTasks(date: today, tasks: [])],
         );
-        when(() => mockRepo.generateTodayTasks(any()))
-            .thenAnswer((_) async => generatedState);
+        when(() => mockRepo.generateTodayTasks(any())).thenAnswer((_) async => generatedState);
         return TaskBloc(mockRepo);
       },
       seed: () => TaskState.loaded(appState: defaultState),
@@ -50,7 +46,7 @@ void main() {
       expect: () {
         final today = StorageService.getTodayKey();
         final expectedState = defaultState.copyWith(
-          days: [DayTasks(date: today, tasks: [])]
+          days: [DayTasks(date: today, tasks: [])],
         );
         return [
           TaskState.loaded(appState: defaultState, isGenerating: true),

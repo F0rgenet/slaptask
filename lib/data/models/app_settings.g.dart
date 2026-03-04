@@ -13,9 +13,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   AppSettings read(BinaryReader reader) {
     final numOfFields = reader.readByte();
-    final fields = <int, dynamic>{
-      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
-    };
+    final fields = <int, dynamic>{for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read()};
     return AppSettings(
       goals: fields[0] as String?,
       taskCount: fields[1] == null ? 5 : (fields[1] as num).toInt(),
@@ -44,9 +42,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AppSettingsAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
+      other is AppSettingsAdapter && runtimeType == other.runtimeType && typeId == other.typeId;
 }
 
 // **************************************************************************
@@ -60,10 +56,9 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   unlimitedRegen: json['unlimitedRegen'] as bool? ?? false,
 );
 
-Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
-    <String, dynamic>{
-      'goals': instance.goals,
-      'taskCount': instance.taskCount,
-      'frequencyHours': instance.frequencyHours,
-      'unlimitedRegen': instance.unlimitedRegen,
-    };
+Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) => <String, dynamic>{
+  'goals': instance.goals,
+  'taskCount': instance.taskCount,
+  'frequencyHours': instance.frequencyHours,
+  'unlimitedRegen': instance.unlimitedRegen,
+};

@@ -19,9 +19,7 @@ class TaskItemWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: task.completed ? SlapTheme.secondary.withValues(alpha: 0.3) : SlapTheme.secondary,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: task.completed ? SlapTheme.border.withValues(alpha: 0.5) : SlapTheme.border,
-          ),
+          border: Border.all(color: task.completed ? SlapTheme.border.withValues(alpha: 0.5) : SlapTheme.border),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,10 +30,7 @@ class TaskItemWidget extends StatelessWidget {
                   ? Container(
                       width: 20,
                       height: 20,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: SlapTheme.success,
-                      ),
+                      decoration: const BoxDecoration(shape: BoxShape.circle, color: SlapTheme.success),
                       alignment: Alignment.center,
                       child: const Icon(Icons.check_rounded, size: 12, color: SlapTheme.successForeground),
                     )

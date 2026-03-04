@@ -16,10 +16,7 @@ class AudioService {
     final dir = await getApplicationDocumentsDirectory();
     final path = '${dir.path}/recording.m4a';
 
-    await _recorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000),
-      path: path,
-    );
+    await _recorder.start(const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000), path: path);
     return path;
   }
 

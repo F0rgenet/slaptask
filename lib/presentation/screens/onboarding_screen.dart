@@ -16,11 +16,8 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => OnboardingBloc(
-        context.read<AudioService>(),
-        context.read<ApiService>(),
-        context.read<TaskRepository>(),
-      ),
+      create: (context) =>
+          OnboardingBloc(context.read<AudioService>(), context.read<ApiService>(), context.read<TaskRepository>()),
       child: _OnboardingContent(onFinish: onFinish),
     );
   }
@@ -41,10 +38,8 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
+    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
+      ..repeat(reverse: true);
   }
 
   @override
@@ -115,10 +110,7 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
             Container(
               width: 32,
               height: 32,
-              decoration: BoxDecoration(
-                color: SlapTheme.primary,
-                borderRadius: BorderRadius.circular(4),
-              ),
+              decoration: BoxDecoration(color: SlapTheme.primary, borderRadius: BorderRadius.circular(4)),
               alignment: Alignment.center,
               child: Text(
                 'СТ',
@@ -146,11 +138,7 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
           Text(
             'Запиши свои цели. ИИ будет каждый день создавать для тебя 5 жестких задач. Никаких оправданий.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 12,
-              color: SlapTheme.mutedForeground,
-              height: 1.6,
-            ),
+            style: GoogleFonts.jetBrainsMono(fontSize: 12, color: SlapTheme.mutedForeground, height: 1.6),
           ),
         ],
       ],
@@ -177,20 +165,12 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
         const SizedBox(height: 32),
         Text(
           'НАЖМИ ДЛЯ ЗАПИСИ',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 10,
-            letterSpacing: 3,
-            color: SlapTheme.mutedForeground,
-          ),
+          style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.mutedForeground),
         ),
         const SizedBox(height: 32),
         Text(
           'ИЛИ ВВЕДИ ВРУЧНУЮ',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 10,
-            letterSpacing: 2,
-            color: SlapTheme.mutedForeground,
-          ),
+          style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 2, color: SlapTheme.mutedForeground),
         ),
         const SizedBox(height: 8),
         GestureDetector(
@@ -242,10 +222,7 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
                   child: Container(
                     width: 110,
                     height: 110,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: SlapTheme.primary.withValues(alpha: 0.15),
-                    ),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: SlapTheme.primary.withValues(alpha: 0.15)),
                   ),
                 ),
               ),
@@ -254,10 +231,7 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
                 child: Container(
                   width: 80,
                   height: 80,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: SlapTheme.primary,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: SlapTheme.primary),
                   alignment: Alignment.center,
                   child: const Icon(Icons.stop_rounded, size: 28, color: SlapTheme.primaryForeground),
                 ),
@@ -266,13 +240,7 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
           ),
         ),
         const SizedBox(height: 24),
-        Text(
-          '$m:$s',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 24,
-            color: SlapTheme.foreground,
-          ),
-        ),
+        Text('$m:$s', style: GoogleFonts.jetBrainsMono(fontSize: 24, color: SlapTheme.foreground)),
         const SizedBox(height: 8),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -280,19 +248,12 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
             Container(
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: SlapTheme.primary,
-              ),
+              decoration: const BoxDecoration(shape: BoxShape.circle, color: SlapTheme.primary),
             ),
             const SizedBox(width: 8),
             Text(
               'ИДЕТ ЗАПИСЬ',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 10,
-                letterSpacing: 3,
-                color: SlapTheme.primary,
-              ),
+              style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.primary),
             ),
           ],
         ),
@@ -325,11 +286,7 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
       children: [
         Text(
           'ТВОИ ЦЕЛИ',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 10,
-            letterSpacing: 3,
-            color: SlapTheme.mutedForeground,
-          ),
+          style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.mutedForeground),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -394,15 +351,12 @@ class _OnboardingContentState extends State<_OnboardingContent> with SingleTicke
         Center(
           child: GestureDetector(
             onTap: () {
-               _editController.clear();
-               context.read<OnboardingBloc>().add(const OnboardingEvent.reset());
+              _editController.clear();
+              context.read<OnboardingBloc>().add(const OnboardingEvent.reset());
             },
             child: Text(
               'перезаписать',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 11,
-                color: SlapTheme.mutedForeground,
-              ),
+              style: GoogleFonts.jetBrainsMono(fontSize: 11, color: SlapTheme.mutedForeground),
             ),
           ),
         ),

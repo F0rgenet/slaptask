@@ -13,7 +13,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   final AudioService _audioService;
   final ApiService _apiService;
   final TaskRepository _repository;
-  
+
   Timer? _timer;
   Timer? _ampTimer;
 
@@ -59,9 +59,9 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   Future<void> _onStopRecording(_StopRecording event, Emitter<OnboardingState> emit) async {
     _timer?.cancel();
     _ampTimer?.cancel();
-    
+
     final path = await _audioService.stopRecording();
-    
+
     if (path == null) {
       emit(const OnboardingState.review(transcript: ''));
       return;

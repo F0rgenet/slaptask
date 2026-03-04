@@ -53,11 +53,7 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
                 const SizedBox(width: 8),
                 Text(
                   'ИСТОРИЯ',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
-                    letterSpacing: 3,
-                    color: SlapTheme.mutedForeground,
-                  ),
+                  style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.mutedForeground),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -107,10 +103,7 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
                           Expanded(
                             child: Text(
                               _formatDate(day.date),
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: SlapTheme.foreground,
-                              ),
+                              style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground),
                             ),
                           ),
                           Text(
@@ -145,44 +138,52 @@ class _TaskHistoryWidgetState extends State<TaskHistoryWidget> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Column(
                         children: day.tasks
-                            .map((task) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 6),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: task.completed
-                                            ? Container(
-                                                width: 16,
-                                                height: 16,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: SlapTheme.success.withValues(alpha: 0.2),
-                                                ),
-                                                alignment: Alignment.center,
-                                                child:
-                                                    const Icon(Icons.check_rounded, size: 10, color: SlapTheme.success),
-                                              )
-                                            : Icon(Icons.circle_outlined,
-                                                size: 16, color: SlapTheme.destructive.withValues(alpha: 0.5)),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          task.text,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 12,
-                                            height: 1.5,
-                                            color: SlapTheme.mutedForeground,
-                                            decoration: task.completed ? TextDecoration.lineThrough : null,
-                                            decorationColor: SlapTheme.mutedForeground.withValues(alpha: 0.3),
-                                          ),
+                            .map(
+                              (task) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: task.completed
+                                          ? Container(
+                                              width: 16,
+                                              height: 16,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: SlapTheme.success.withValues(alpha: 0.2),
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: const Icon(
+                                                Icons.check_rounded,
+                                                size: 10,
+                                                color: SlapTheme.success,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.circle_outlined,
+                                              size: 16,
+                                              color: SlapTheme.destructive.withValues(alpha: 0.5),
+                                            ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        task.text,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          height: 1.5,
+                                          color: SlapTheme.mutedForeground,
+                                          decoration: task.completed ? TextDecoration.lineThrough : null,
+                                          decorationColor: SlapTheme.mutedForeground.withValues(alpha: 0.3),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ))
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
                             .toList(),
                       ),
                     ),

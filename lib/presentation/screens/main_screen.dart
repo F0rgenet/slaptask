@@ -26,9 +26,9 @@ class MainScreen extends StatelessWidget {
                   state.mapOrNull(
                     loaded: (s) {
                       if (s.error != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(s.error!), backgroundColor: SlapTheme.destructive),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(s.error!), backgroundColor: SlapTheme.destructive));
                       }
                     },
                   );
@@ -43,9 +43,8 @@ class MainScreen extends StatelessWidget {
                         ..sort((a, b) => b.date.compareTo(a.date));
 
                       final anyChecked = (todayTasks?.completedCount ?? 0) > 0;
-                      final canRegenerate = todayTasks != null &&
-                          !anyChecked &&
-                          (!todayTasks.regenerated || appState.unlimitedRegen);
+                      final canRegenerate =
+                          todayTasks != null && !anyChecked && (!todayTasks.regenerated || appState.unlimitedRegen);
 
                       return SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -96,10 +95,7 @@ class MainScreen extends StatelessWidget {
           Container(
             width: 28,
             height: 28,
-            decoration: BoxDecoration(
-              color: SlapTheme.primary,
-              borderRadius: BorderRadius.circular(4),
-            ),
+            decoration: BoxDecoration(color: SlapTheme.primary, borderRadius: BorderRadius.circular(4)),
             alignment: Alignment.center,
             child: Text(
               'СТ',
@@ -125,9 +121,7 @@ class MainScreen extends StatelessWidget {
             onTap: onOpenSettings,
             child: Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-              ),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
               child: const Icon(Icons.settings_outlined, size: 18, color: SlapTheme.mutedForeground),
             ),
           ),
@@ -151,7 +145,7 @@ class MainScreen extends StatelessWidget {
       'сентября',
       'октября',
       'ноября',
-      'декабря'
+      'декабря',
     ];
     final dateStr = '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
 
@@ -159,19 +153,15 @@ class MainScreen extends StatelessWidget {
     final greeting = hour < 12
         ? 'Доброе утро'
         : hour < 17
-            ? 'Добрый день'
-            : 'Добрый вечер';
+        ? 'Добрый день'
+        : 'Добрый вечер';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           dateStr.toUpperCase(),
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 10,
-            letterSpacing: 3,
-            color: SlapTheme.mutedForeground,
-          ),
+          style: GoogleFonts.jetBrainsMono(fontSize: 10, letterSpacing: 3, color: SlapTheme.mutedForeground),
         ),
         const SizedBox(height: 4),
         Text(

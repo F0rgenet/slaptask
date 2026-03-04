@@ -6,11 +6,7 @@ class EmptyStateWidget extends StatelessWidget {
   final bool isGenerating;
   final VoidCallback onGenerate;
 
-  const EmptyStateWidget({
-    super.key,
-    required this.isGenerating,
-    required this.onGenerate,
-  });
+  const EmptyStateWidget({super.key, required this.isGenerating, required this.onGenerate});
 
   @override
   Widget build(BuildContext context) {
@@ -30,19 +26,12 @@ class EmptyStateWidget extends StatelessWidget {
             child: const Icon(Icons.flash_on_rounded, size: 28, color: SlapTheme.mutedForeground),
           ),
           const SizedBox(height: 24),
-          Text(
-            'На сегодня задач пока нет',
-            style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground),
-          ),
+          Text('На сегодня задач пока нет', style: GoogleFonts.inter(fontSize: 14, color: SlapTheme.foreground)),
           const SizedBox(height: 8),
           Text(
             'Создайте список задач на день или\nдождитесь автогенерации в 10:00',
             textAlign: TextAlign.center,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 11,
-              color: SlapTheme.mutedForeground,
-              height: 1.5,
-            ),
+            style: GoogleFonts.jetBrainsMono(fontSize: 11, color: SlapTheme.mutedForeground, height: 1.5),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -64,7 +53,8 @@ class EmptyStateWidget extends StatelessWidget {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: SlapTheme.primaryForeground))
+                          child: CircularProgressIndicator(strokeWidth: 2, color: SlapTheme.primaryForeground),
+                        )
                       : const Icon(Icons.flash_on_rounded, size: 16),
                   const SizedBox(width: 8),
                   Text(
